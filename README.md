@@ -4,11 +4,10 @@ Ce projet est un générateur de matchs de badminton en double, conçu pour orga
 
 ## Fonctionnalités
 
-- Génération automatique de matchs de badminton en double.
-- Prise en compte des préférences des joueurs.
-- Équilibrage des matchs pour éviter les répétitions fréquentes.
-- Gestion des "byes" pour les tours impairs.
-- Algorithmes avancés pour optimiser la répartition des joueurs.
+- Génération automatique de matchs de badminton en double (Ronde Suisse).
+- On ne joue qu'une fois avec le même joueur et au plus 2 fois avec le même adversaire.
+- Gestion des "sortants" en fonction du nombre de terrains (on essaye d'approcher le nombre moyen de match).
+- Algorithmes avancés pour optimiser la répartition des joueurs (très dépendant du nombre de terrains et du nombre de tours à générer).
 
 ## Installation
 
