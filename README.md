@@ -4,10 +4,11 @@ Ce projet est un générateur de matchs de badminton en double, conçu pour orga
 
 ## Fonctionnalités
 
-- Génération automatique de matchs de badminton en double (Ronde Suisse).
+Génération automatique de matchs de badminton en double (Ronde Suisse, **maximum 56 joueurs**).
 - On ne joue qu'une fois avec le même joueur et au plus 2 fois avec le même adversaire.
 - Gestion des "sortants" en fonction du nombre de terrains (on essaye d'approcher le nombre moyen de match).
 - Algorithmes avancés pour optimiser la répartition des joueurs (très dépendant du nombre de terrains et du nombre de tours à générer).
+- Utilisation d'une base de rotation (fichier import.js) pour gagner du temps lors de la fabrication des tours.
 
 ## Installation
 
