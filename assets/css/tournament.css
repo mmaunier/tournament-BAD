@@ -1,0 +1,689 @@
+body{
+    font-family: 'Handlee', cursive;
+    font-family: 'Inconsolata', monospace;
+    font-family: 'Indie Flower', cursive;
+    font-family: 'Marvel', sans-serif;
+    user-select: none;
+    overflow: hidden;
+}
+
+div#global{
+    display: flex;
+    flex-direction: column;
+}
+
+button.btn{
+    margin: 5px;
+    max-height: 50px;
+}
+
+button.btn img{
+    margin-right: 5px;
+}
+input[type="text"]{
+    border-radius: 5px;;
+}
+
+div#header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #8b8b8b;
+    align-items: center;
+}
+
+div#body {
+    display: flex;
+    justify-content: flex-start;
+    flex: 1 1 auto;
+    padding: 0px;
+    background-color: rgb(239, 239, 239);
+    align-items: center;
+    flex-direction: column;
+    overflow: auto;
+    /*background: linear-gradient(white, dimgrey);*/
+}
+
+div#footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #8b8b8b;
+    align-items: center;
+    flex-direction: row;
+    box-shadow: 0px -5px 9px 2px #b7b7b7;
+    z-index: 10;
+}
+
+div#footer.selection{
+    justify-content: space-between;
+}
+
+div#headerJoueur, div#headerPreparation, div#headerContrainte, div#headerTour, div#headerJoueurClassement{
+    background-color: rgb(209 205 205);
+    display: flex;
+    justify-content: space-between;
+    padding: 0px 10px;
+    align-items: center;
+    text-shadow: -1px -1px 0 rgba(0,0,0,0.4), 1px 1px 0 rgba(255,255,255,1);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #5b5b5b;
+    line-height: 1em;
+    box-shadow: 0px 3px 7px -1px #9a9a9a;
+}
+
+#headerText {
+    background-color: rgb(209 205 205);
+    align-items: center;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.4), 1px 1px 0 rgba(255, 255, 255, 1);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #c40000;
+
+}
+
+.headerTitle{
+    font-size: 1.5em;
+    color: white;
+    text-shadow: 2px 2px 1px #676565;
+    line-height: 1em;
+}
+
+div#listJoueurs, div#listPreparation, div#listContraintes, div#listJoueursClassement{
+    width: 100%;
+}
+
+div#listJoueurs.accueilJoueur {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+div.joueur{
+    display: flex;
+    padding: 5px 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    border-bottom: 2px lightgray ridge;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+div.joueur.selection{
+    flex: 1 1 auto;
+    justify-content: space-between;
+    border: none;
+    background-color: transparent;
+}
+
+
+div.joueur.selection.homme{
+    background-color: transparent !important;
+}
+
+div.joueur.selection.femme{
+    background-color: transparent !important;
+}
+
+div.divPreparation{
+    display: flex;
+    margin: 0px 10px;
+    padding: 5px;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: start;
+}
+
+div.divJoueur.selectionJoueur{
+    cursor: pointer;
+}
+
+div.joueur.homme{
+    background-color: rgb(168, 194, 210);
+}
+div.joueur.femme{
+    background-color: #feb494;
+}
+
+div.joueur:last-child, div.divPreparation:last-child {
+    border: none;
+}
+
+div.joueur.accueil{
+    border: 1px solid gray;
+    margin: 5px;
+    border-radius: 5px;
+    align-items: center;
+    font-size: 0.9rem;
+    box-shadow: 5px 3px 5px 0px grey;
+    justify-content: center;
+    max-width: 100px;
+    max-height: 104px;
+    overflow: hidden;
+    flex-direction: column;
+    line-height: 16px;
+}
+
+div.divJoueurs.accueil {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
+}
+
+div.joueur.selection{
+    flex: 1 1 auto;
+}
+
+div.joueurSelection{
+    display: flex;
+    border-bottom: 1px solid gray;
+    cursor: pointer;
+}
+
+div.joueurSelection.homme:hover{
+    background-color: none;
+    background: linear-gradient(45deg, #dbdbdb, #a8c2d2);;
+}
+div.joueurSelection.femme:hover{
+    background-color: none;
+    background: linear-gradient(45deg, #dbdbdb,#feb494);;
+}
+
+span.nomJoueur{
+    margin: 0px 0px 5px 5px;
+    flex: 1 1 auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-height: 70px;
+}
+
+div.property{
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: column;
+    margin: 10px;
+}
+
+div.propertyRow{
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.propertyValue{
+    margin-left: 0px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+button.bouton{
+    margin: 5px;
+}
+
+label.propertyKey{
+    color: gray;
+    font-size: 1em;
+    padding-left: 5px;
+}
+label.propertyKey.columnReverse{
+    margin-bottom:0px;
+    margin-top:0.5rem;
+}
+
+span.propertyValue{
+    color: black;
+    font-size: 1em;
+    padding: 5px;
+    flex: 1 1 auto;
+}
+
+.noData{
+    font-style: italic;
+    margin: 10px;
+}
+
+.labelCheckbox{
+    margin-left: 5px;
+    margin-bottom: 0px;
+    cursor: pointer;
+}
+
+div.divRadio{
+    display: flex;
+    align-items: center;
+    margin: 10px;
+    cursor: pointer;
+}
+
+div.divRadio label.labelCheckbox {
+    cursor: pointer;
+}
+
+span.headerTitle{
+    flex: 1 1 auto;
+    margin-left: 10px;
+}
+
+label.selectionJoueur{
+    margin-left: 10px;
+    cursor: pointer;
+    margin-bottom: 0px;
+}
+
+#navbarDropdownMenuLink{
+    border-radius: 5px;
+}
+
+.numberSpinner{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: gray 1px solid;
+    width:  140px;
+    height: initial;
+    border-radius: 6px;
+}
+
+.numberSpinner.vertical{
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: center;
+    align-items: center;
+    border: gray 1px solid;
+    width:  40px;
+    height: 132px;
+    border-radius: 6px;
+}
+
+.numberSpinner.vertical button{
+    width: 40px;
+}
+
+.numberSpinner.vertical span{
+    line-height: 60px;
+}
+
+.numberSpinnerValue{
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+}
+
+.numberSpinnerPlusMoins{
+    margin: -1px !important;
+    border: 0px;
+}
+
+.numberSpinnerPlus{
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
+    border: 0px;
+}
+
+.numberSpinnerMoins{
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+    border: 0px;
+}
+
+.numberSpinnerPlusVertical{
+    border-bottom-left-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+    border: 0px;
+}
+
+.numberSpinnerMoinsVertical{
+    border-top-left-radius: 0px !important;
+    border-top-right-radius: 0px !important;
+    border: 0px;
+}
+
+.handicaps{
+    width: inherit;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.contrainteTitle{
+    font-size: 1.5em;
+    font-weight: bold;
+}
+.contrainteDesc{
+    font-size: 1em;
+    color: gray;
+}
+
+.contrainte{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.ssContrainte{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    margin-left: 10px;
+    cursor: pointer;
+}
+div.divContrainte{
+    display: flex;
+    padding: 5px 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 2px lightgray ridge;
+    margin: 10px 0px;
+    align-items: center;
+}
+
+span.numContrainte {
+    margin-left: 10px;
+}
+
+.divSsTitle{
+    align-items: center;
+    margin: 10px 0px;
+}
+.ssTitle{
+    margin-right: 10px;
+    font-size: 1.3rem;
+}
+.nbSsTitle{
+    font-size: 0.7em;
+    text-shadow: none;
+    color:  gray;
+}
+
+.match{
+    display: flex;
+    flex-direction: row;
+    margin: 0px;
+    border-radius: 10px;
+    background-color: #bfbfbf;
+    padding: 0px;
+    align-items: center;
+    width: 299px;
+}
+
+.matchs{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.divMatch{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px;
+}
+
+.joueurAttente{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+    padding: 5px;
+}
+.tour{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.currentTour{
+    background-color: #7bbaff;
+}
+.closedTour{
+    background-color: #99ce99;
+}
+.forPlayingTour{
+    background-color: lightgray ;
+}
+
+div.currentTour div.match{
+    background-color: white ;
+}
+
+.match div.property{
+    align-items: center;
+}
+
+.match span{
+    text-align: center;
+
+}
+
+.equipe{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 95px;
+}
+.headerTour{
+    box-shadow: 0px 0px 14px 2px #9a9a9a;
+}
+
+.badge{
+    font-size: 0.9rem;
+    box-shadow: 0px 0px 5px 2px #9a9a9a;
+    margin-left: 3px;
+}
+
+#divMatchNegatif label{
+    margin-bottom:0px;
+}
+#divMatchNegatif{
+    margin-bottom: 7px;
+    font-size: 1.5rem;
+    /* border-bottom: 1px solid gray; */
+    box-shadow: 2px 2px 5px 0px grey;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.pointMatch{
+    margin: 0px !important;
+}
+
+.volant{
+    height: 20px;
+    margin: 10px 5px;
+}
+
+.divImgVolant{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.sepVolant{
+    /* flex: 1 1 auto; */
+    background-color: gray;
+    height: 30px;
+    width: 2px;
+    border-radius: 50%;
+    box-shadow: 0 0 16px 1px #575757;
+}
+
+.allSelect{
+    display: flex;
+    justify-content: flex-start;
+    margin: 10px;
+    align-items: center;
+    cursor: pointer;
+}
+
+#listGroupeJoueur{
+    display: flex;
+    width: 100%;
+}
+.groupeJoueur{
+    cursor: pointer;
+    width: 100%;
+    padding: 10px;
+}
+.groupeJoueur:hover{
+    background-color: lightgray;
+}
+.groupeJoueur span{
+    margin-left:10px;
+}
+
+div.forPlayingTour button, div.closedTour button{
+    pointer-events: none;
+}
+
+.headerMatch{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.victoire{
+    background-color: transparent;
+    border: none;
+    height: 30px;
+    padding: 0px;
+    width: 40px;
+    opacity: 0.3;
+    margin: 3px 0px !important;
+}
+.victoire:hover{
+    /*background-color: #9ce9be;*/
+    border: none;
+    opacity: 1;
+}
+
+.gagne{
+    background-color: lightgreen;
+    font-weight: bold;
+}
+
+.perd{
+    background-color: coral;
+}
+
+#limitPoint{
+    width: 45px;
+}
+
+.divJoueurClassement{
+    display: flex;
+    justify-content: center;
+}
+
+.pointsJoueur{
+    flex: 0.5 1 auto;
+}
+
+.divJoueursClassement{
+    margin: 10px 20%;
+}
+
+.tableClassement{
+    width: 100%;
+    text-align: center;
+}
+
+.logoLigue{
+    height: 40px;
+    border-radius: 5px;
+}
+
+.logoLigue:hover{
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0px 0px 8px 9px #96a3d0;
+    cursor: pointer;
+}
+
+.aide{
+    padding: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #ffcf62;
+    border-radius: 5px;
+    color: black;
+    font-style: italic;
+}
+
+.aide:hover{
+    background-color: #f8dc9b;
+}
+
+.aide img{
+    margin-right: 5px;
+    height: 20px;
+}
+
+.divLogoComite{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.logoComite{
+    height: 60px;
+    margin: 10px;
+}
+
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+.checkInclude{
+    pointer-events: none;
+}
+
+#theadClassement th{
+    font-weight: 800;
+    color: white;
+    background-color: #919191;
+}
+
+#XLSXFile {
+    display:none;
+}
