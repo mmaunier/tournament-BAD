@@ -16,7 +16,7 @@ Génération automatique de matchs de badminton en double (Ronde Suisse, **maxim
 
    ```bash
    git clone https://github.com/mmaunier/tournament-BAD
-   cd votre-repo
+   cd tournament-BAD
    ```
 
 ## Utilisation
