@@ -1530,70 +1530,24 @@ function afficheInfo(evt){
     document.getElementById("buttonApropos").click();
 }
 
-// function exportToExcel(jsonData) {
-//     // Vérifiez et convertissez les données JSON en tableau
-//     var dataJoueurs = Array.isArray(jsonData.joueurs) ? jsonData.joueurs : [jsonData.joueurs];
-//     var dataTournoi = Array.isArray(jsonData.tournoi) ? jsonData.tournoi : [jsonData.tournoi];
-    
-
-//     // Ajouter le genre aux données des joueurs
-//     dataJoueurs = dataJoueurs.map(joueur => ({
-//         "Nom": joueur.name,
-//         "Genre": joueur.genre.value,
-//         "Niveau": joueur.niveau.value,
-//         "Points": joueur.points,
-//         "Tours Joués": joueur.toursJoues
-//     }));
-    
-//     // Convertir les données des tours en un format approprié
-//     var dataTours = [];
-//     if (Array.isArray(jsonData.tournoi.tours)) {
-//         jsonData.tournoi.tours.forEach((tour, index) => {
-//             tour.matchs.forEach((match, matchIndex) => {
-//                 dataTours.push({
-//                     "Tour": index + 1,
-//                     "Match": matchIndex + 1,
-//                     "Equipe A": match.equipeA.map(joueur => joueur.name).join(", "),
-//                     "Equipe B": match.equipeB.map(joueur => joueur.name).join(", "),
-//                     "Points Equipe A": match.ptsEquipeA,
-//                     "Points Equipe B": match.ptsEquipeB,
-//                     "Joueurs Sortants": tour.joueurAttente.map(joueur => joueur.name).join(", ")
-//                 });
-//             });
-//         });
-//     }
-
-
-
-//     // Convertir les données JSON en feuilles de calcul
-//     var worksheetJoueurs = XLSX.utils.json_to_sheet(dataJoueurs);
-//     var worksheetTournoi = XLSX.utils.json_to_sheet(dataTournoi);
-//     var worksheetTour = XLSX.utils.json_to_sheet(dataTours);
-
-//     // Créer un nouveau classeur
-//     var workbook = XLSX.utils.book_new();
-
-//     // Ajouter les feuilles de calcul au classeur
-//     XLSX.utils.book_append_sheet(workbook, worksheetJoueurs, "Joueurs");
-//     XLSX.utils.book_append_sheet(workbook, worksheetTournoi, "Tournoi");
-//     XLSX.utils.book_append_sheet(workbook, worksheetTour, "Tours");
-
-//     // Générer un fichier Excel et le télécharger
-//     XLSX.writeFile(workbook, `tournoi_et_joueurs_${DB_NAME}.xlsx`);
-// }
 
 function exportToExcel(jsonData) {
-    // Vérifiez et convertissez les données JSON en tableau
-    var dataJoueurs = Array.isArray(jsonData.joueurs) ? jsonData.joueurs : [jsonData.joueurs];
+    let joueursCopie;
+    // Appeler la fonction calculernbToursPrevus pour obtenir une copie des joueurs
+    if (bd.tournoi.currentTour==0) {
+        joueursCopie = calculernbToursPrevus(jsonData);
+    } else {
+        joueursCopie = JSON.parse(JSON.stringify(jsonData.joueurs));
+    }
     var dataTournoi = Array.isArray(jsonData.tournoi) ? jsonData.tournoi : [jsonData.tournoi];
 
     // Préparer les données des joueurs
-    dataJoueurs = dataJoueurs.map(joueur => ({
+    var dataJoueurs = joueursCopie.map(joueur => ({
         "Nom": joueur.name,
         "Genre": joueur.genre.value,
         "Niveau": joueur.niveau.value,
         "Points": joueur.points,
-        "Tours Joués": joueur.toursJoues
+        "Nombre de matchs joués": joueur.toursJoues
     }));
 
     // Préparer les données des matchs pour la feuille "Tours"
@@ -1656,32 +1610,36 @@ function showModalFinTournoi(){
 }
 
 
+function calculernbToursPrevus(jsonData) {
+    // Créer une copie profonde de la liste des joueurs à partir de jsonData
+    let joueursCopie = JSON.parse(JSON.stringify(jsonData.joueurs));
 
-/// ICI à mettre dans la fonction juste après !!
-function calculerToursJoues() {
-    // Initialiser toursJoues pour chaque joueur
-    bd.joueurs.forEach(joueur => {
+    // Initialiser toursJoues pour chaque joueur dans la copie
+    joueursCopie.forEach(joueur => {
         joueur.toursJoues = 0;
     });
 
     // Parcourir les tours et les matchs
-    for (var i = 0; i < bd.tournoi.currentTour; i++) {
+    for (var i = 0; i < bd.tournoi.nbTour; i++) {
         for (var j = 0; j < bd.tournoi.tours[i].matchs.length; j++) {
             var match = bd.tournoi.tours[i].matchs[j];
             match.equipeA.forEach(joueurA => {
-                let joueur = bd.joueurs.find(j => j.id === joueurA.id);
+                let joueur = joueursCopie.find(j => j.name === joueurA.name);
                 if (joueur) {
                     joueur.toursJoues++;
                 }
             });
             match.equipeB.forEach(joueurB => {
-                let joueur = bd.joueurs.find(j => j.id === joueurB.id);
+                let joueur = joueursCopie.find(j => j.name === joueurB.name);
                 if (joueur) {
                     joueur.toursJoues++;
                 }
             });
         }
     }
+
+    // Retourner ou utiliser la copie des joueurs modifiée
+    return joueursCopie;
 }
 
 function finTournoi(){
@@ -1719,11 +1677,28 @@ function finTournoi(){
         }
     }
 
+    showModalExportChoice();
+
 
     bd.updateTournoi({"currentTour": -1});
     $('#modalFinTournoi').modal('hide');
     selectPage(pages.ACCUEIL);
 }
+
+function showModalExportChoice() {
+    $('#modalExportChoice').modal('show');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('btnExportXLSX').addEventListener('click', function () {
+        var jsonData = bd.getDatas();
+        exportToExcel(jsonData);
+        $('#modalExportChoice').modal('hide');
+    });
+});
+
+
+
 async function validTour(){
     var matchsNonTermine = false;
     if (bd.tournoi.modeComptage==modeComptageListe.POINTS) { // On compte les points
