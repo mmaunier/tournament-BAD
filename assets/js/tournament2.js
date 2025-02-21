@@ -603,13 +603,20 @@ function buildHeader(){
             buttonFinTournoi.innerHTML = "Fin du tournoi";
             buttonFinTournoi.classList.add("btn-danger");
             header.appendChild(buttonFinTournoi);
+            var buttonEchangeJoueurs = MH.makeButton({
+                type: "click",
+                func: showModalEchangeJoueurs.bind(this)
+            });
+            buttonEchangeJoueurs.innerHTML = "Échanger joueurs";
+            buttonEchangeJoueurs.classList.add("btn-warning");
+            header.appendChild(buttonEchangeJoueurs);
             var buttonExportData = MH.makeButton({
                 type: "click",
                 func: function() {
                     var jsonData = bd.getDatas();
                     exportToExcel(jsonData);
                 }
-            });
+            });            
             buttonExportData.innerHTML = "Exporter données";
             buttonExportData.classList.add("btn-info");
             header.appendChild(buttonExportData);
@@ -1352,38 +1359,6 @@ function buildEditor(type, attributes){
             input.setAttribute("value", attributes["value"]);
             input.setAttribute("id", attributes["id"]);
             return input;
-        // case "numberSpinner":
-        //     var vertical = attributes["vertical"] == true;
-        //     var divInputNumber = MH.makeDiv(attributes["id"], "numberSpinner" + (vertical ? " vertical" : ""));
-        //     for (var att in attributes){
-        //         divInputNumber.setAttribute(att, attributes[att]);
-        //     }
-        //     var spanNumber = MH.makeSpan(attributes["value"], "numberSpinnerValue");
-        //     divInputNumber.appendChild(spanNumber);
-
-        //     var buttonMoins = MH.makeButton({
-        //         type: "click",
-        //         func: numberPlusOuMoins.bind(this, false, spanNumber, undefined, )
-        //     });
-        //     buttonMoins.addEventListener('touchstart', preventZoom);
-        //     buttonMoins.innerHTML = "-";
-        //     buttonMoins.classList.add("btn-secondary");
-        //     buttonMoins.classList.add("numberSpinnerPlusMoins");
-        //     buttonMoins.classList.add("numberSpinnerMoins"+ (vertical ? "Vertical" : ""));
-        //     divInputNumber.insertBefore(buttonMoins, spanNumber);
-
-        //     var buttonPlus = MH.makeButton({
-        //         type: "click",
-        //         func: numberPlusOuMoins.bind(this, true, spanNumber, undefined)
-        //     });
-        //     buttonPlus.addEventListener('touchstart', preventZoom);
-        //     buttonPlus.innerHTML = "+";
-        //     buttonPlus.classList.add("btn-secondary");
-        //     buttonPlus.classList.add("numberSpinnerPlusMoins");
-        //     buttonPlus.classList.add("numberSpinnerPlus"+ (vertical ? "Vertical" : ""));
-        //     divInputNumber.appendChild(buttonPlus);
-
-        //     return divInputNumber;
         case "numberSpinner":
             var vertical = attributes["vertical"] == true;
             var divInputNumber = MH.makeDiv(attributes["id"], "numberSpinner" + (vertical ? " vertical" : ""));
@@ -1610,6 +1585,7 @@ function showModalFinTournoi(){
 }
 
 
+
 function calculernbToursPrevus(jsonData) {
     // Créer une copie profonde de la liste des joueurs à partir de jsonData
     let joueursCopie = JSON.parse(JSON.stringify(jsonData.joueurs));
@@ -1695,8 +1671,121 @@ document.addEventListener('DOMContentLoaded', function () {
         exportToExcel(jsonData);
         $('#modalExportChoice').modal('hide');
     });
+
+    document.getElementById('btnEchangerJoueurs').addEventListener('click', function () {
+        var tourIndex = parseInt(document.getElementById('selectTour').value);
+        var joueurAttenteIndex = parseInt(document.getElementById('selectJoueurAttente').value);
+        var matchData = JSON.parse(document.getElementById('selectJoueurMatch').value);
+        var matchIndex = matchData.matchIndex;
+        var team = matchData.team;
+        var playerIndexInTeam = matchData.index;
+
+        // Échanger les joueurs
+        var joueurAttente = bd.tournoi.tours[tourIndex].joueurAttente[joueurAttenteIndex];
+        var joueurEnMatch;
+        if (team === 'A') {
+            joueurEnMatch = bd.tournoi.tours[tourIndex].matchs[matchIndex].equipeA[playerIndexInTeam];
+            bd.tournoi.tours[tourIndex].matchs[matchIndex].equipeA[playerIndexInTeam] = joueurAttente;
+        } else {
+            joueurEnMatch = bd.tournoi.tours[tourIndex].matchs[matchIndex].equipeB[playerIndexInTeam];
+            bd.tournoi.tours[tourIndex].matchs[matchIndex].equipeB[playerIndexInTeam] = joueurAttente;
+        }
+        bd.tournoi.tours[tourIndex].joueurAttente[joueurAttenteIndex] = joueurEnMatch;
+
+        updateHandicapsEtProprietes(joueurAttente, joueurEnMatch, tourIndex, matchIndex, playerIndexInTeam);
+        bd.save();
+        $('#modalEchangeJoueurs').modal('hide');
+        selectPage(pages.EXECUTION_TOURNOI);
+    });
 });
 
+function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
+    // Mettre à jour les handicaps des joueurs
+    joueurAttente.points = joueurAttente.getPointsHandicap();
+    joueurMatch.points = joueurMatch.getPointsHandicap();
+
+    // Mettre à jour les propriétés des matchs
+    var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
+    var equipeA = match.equipeA;
+    var equipeB = match.equipeB;
+
+    var ptsEquipeA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+    var ptsEquipeB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+
+    match.ptsEquipeA = ptsEquipeA;
+    match.ptsEquipeB = ptsEquipeB;
+    match.ptsEquipeADepart = ptsEquipeA;
+    match.ptsEquipeBDepart = ptsEquipeB;
+
+    // Mettre à jour les adversaires et coéquipiers
+    joueurAttente.adversaires = joueurMatch.adversaires;
+    joueurAttente.coequipiers = joueurMatch.coequipiers;
+    joueurMatch.adversaires = joueurAttente.adversaires;
+    joueurMatch.coequipiers = joueurAttente.coequipiers;
+}
+
+function showModalEchangeJoueurs() {
+    // Remplir la liste des tours
+    var selectTour = document.getElementById('selectTour');
+    selectTour.innerHTML = '';
+    bd.tournoi.tours.forEach((tour, tourIndex) => {
+        var option = document.createElement('option');
+        option.value = tourIndex;
+        option.text = `Tour ${tourIndex + 1}`;
+        selectTour.appendChild(option);
+    });
+
+    // Ajouter un écouteur d'événements pour mettre à jour les listes des joueurs en attente et des joueurs en match
+    selectTour.addEventListener('change', updateJoueursListes);
+
+    // Initialiser les listes des joueurs en attente et des joueurs en match pour le premier tour
+    updateJoueursListes();
+
+    $('#modalEchangeJoueurs').modal('show');
+}
+
+function updateJoueursListes() {
+    var tourIndex = parseInt(document.getElementById('selectTour').value);
+    var selectJoueurAttente = document.getElementById('selectJoueurAttente');
+    var selectJoueurMatch = document.getElementById('selectJoueurMatch');
+
+    // Vider les listes déroulantes
+    selectJoueurAttente.innerHTML = '';
+    selectJoueurMatch.innerHTML = '';
+
+    // Remplir la liste des joueurs en attente
+    // Créer un tableau de paires {index: originalIndex, joueur: joueur} puis trier par nom.
+    var joueursAttente = bd.tournoi.tours[tourIndex].joueurAttente
+        .map((joueur, index) => ({ index, joueur }))
+        .sort((a, b) => a.joueur.name.localeCompare(b.joueur.name));
+
+    joueursAttente.forEach(pair => {
+        var option = document.createElement('option');
+        option.value = pair.index; // stocke l'indice réel
+        option.text = pair.joueur.name;
+        selectJoueurAttente.appendChild(option);
+    });
+
+    // Remplir la liste des joueurs en cours de match
+    // Pour chaque match, pour chaque joueur, on stocke également l'indice du match
+    bd.tournoi.tours[tourIndex].matchs.forEach((match, matchIndex) => {
+        // Pour équipe A
+        match.equipeA.forEach((joueur, index) => {
+            var option = document.createElement('option');
+            // Stocker un objet JSON qui contient l'indice de match et l'indice dans l'équipe
+            option.value = JSON.stringify({ matchIndex, team: 'A', index });
+            option.text = joueur.name;
+            selectJoueurMatch.appendChild(option);
+        });
+        // Pour équipe B
+        match.equipeB.forEach((joueur, index) => {
+            var option = document.createElement('option');
+            option.value = JSON.stringify({ matchIndex, team: 'B', index });
+            option.text = joueur.name;
+            selectJoueurMatch.appendChild(option);
+        });
+    });
+}
 
 
 async function validTour(){
