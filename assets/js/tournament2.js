@@ -20,6 +20,7 @@ window.addEventListener("dblclick", function(evt){evt.preventDefault();});
 class GlobalDataBase{
     constructor(dbName){
         this.dbName = dbName;
+        localStorage.clear();
         this.load(JSON.parse(localStorage.getItem(this.dbName)));
     }
     dbName = "";
