@@ -1753,37 +1753,42 @@ function updateJoueursListes() {
     selectJoueurAttente.innerHTML = '';
     selectJoueurMatch.innerHTML = '';
 
-    // Remplir la liste des joueurs en attente
-    // Créer un tableau de paires {index: originalIndex, joueur: joueur} puis trier par nom.
+    // Remplir et trier la liste des joueurs en attente
     var joueursAttente = bd.tournoi.tours[tourIndex].joueurAttente
         .map((joueur, index) => ({ index, joueur }))
         .sort((a, b) => a.joueur.name.localeCompare(b.joueur.name));
 
     joueursAttente.forEach(pair => {
         var option = document.createElement('option');
-        option.value = pair.index; // stocke l'indice réel
+        option.value = pair.index; // on conserve l'indice réel
         option.text = pair.joueur.name;
         selectJoueurAttente.appendChild(option);
     });
 
-    // Remplir la liste des joueurs en cours de match
-    // Pour chaque match, pour chaque joueur, on stocke également l'indice du match
+    // Remplir la liste des joueurs en match en les combinant puis les trier alphabétiquement
+    var joueurMatchOptions = [];
     bd.tournoi.tours[tourIndex].matchs.forEach((match, matchIndex) => {
         // Pour équipe A
         match.equipeA.forEach((joueur, index) => {
-            var option = document.createElement('option');
-            // Stocker un objet JSON qui contient l'indice de match et l'indice dans l'équipe
-            option.value = JSON.stringify({ matchIndex, team: 'A', index });
-            option.text = joueur.name;
-            selectJoueurMatch.appendChild(option);
+            joueurMatchOptions.push({
+                optionValue: JSON.stringify({ matchIndex, team: 'A', index }),
+                name: joueur.name
+            });
         });
         // Pour équipe B
         match.equipeB.forEach((joueur, index) => {
-            var option = document.createElement('option');
-            option.value = JSON.stringify({ matchIndex, team: 'B', index });
-            option.text = joueur.name;
-            selectJoueurMatch.appendChild(option);
+            joueurMatchOptions.push({
+                optionValue: JSON.stringify({ matchIndex, team: 'B', index }),
+                name: joueur.name
+            });
         });
+    });
+    joueurMatchOptions.sort((a, b) => a.name.localeCompare(b.name));
+    joueurMatchOptions.forEach(item => {
+        var option = document.createElement('option');
+        option.value = item.optionValue;
+        option.text = item.name;
+        selectJoueurMatch.appendChild(option);
     });
 }
 
@@ -1818,6 +1823,8 @@ async function validTour(){
         });
         //window.location.href = "#headerTour" + bd.tournoi.currentTour;
     }else{
+        bd.tournoi.currentTour++; // On incrémente pour ne pas compter le tour non validé
+        bd.save();
         finTournoi();
     }
 }

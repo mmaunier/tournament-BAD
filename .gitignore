@@ -16,3 +16,5 @@ assets/js/propositions AIs/Byes_GPT-o1_mini_v2-Algo-Génétique-EXPLICATIONS.txt
 assets/js/propositions AIs/Byes_GPT-o1_mini_v2-Algo-Génétique.js
 assets/js/propositions AIs/Byes_GPT-o1_mini_v2-RecuitSimulé.js
 assets/js/propositions AIs/Byes_GPT-o1_v1.js
+assets/js/Autres/generateur_liste_noms_csv.js
+assets/js/Autres/joueurs.csv
