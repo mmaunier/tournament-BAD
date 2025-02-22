@@ -490,7 +490,16 @@ div.currentTour div.match{
     border-radius: 5px;
     cursor: pointer;
 }
-
+#divContainerLimiterTour {
+    margin-top: 15px;
+    margin-bottom: 7px;
+    /*font-size: 1.5rem;*/
+    /* border-bottom: 1px solid gray; */
+    box-shadow: 2px 2px 5px 0px grey;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
 .pointMatch{
     margin: 0px !important;
 }

@@ -800,8 +800,6 @@ function buildPreparation(){
     var divPrep = MH.makeDiv(null, "divPreparation");
     switch (currentPage){
         case pages.ACCUEIL:
-            // divPrep.appendChild(buildPropertyViewer("Type de tournoi", bd.tournoi.typeTournoi));
-            // divPrep.appendChild(buildPropertyViewer("Mode", bd.tournoi.modeTournoi));
             divPrep.appendChild(buildPropertyViewer("Modifier le nombre de tours (10 par défaut)", bd.tournoi.limiterTour ? "Oui" : "Non"));
             if (bd.tournoi.limiterTour) {
                 divPrep.appendChild(buildPropertyViewer("Nombre de tours", bd.tournoi.nbTour));
@@ -815,27 +813,34 @@ function buildPreparation(){
             listPrep.appendChild(divPrep);
             break;
         case pages.MODIFICATION_PREPARATION:
+            var containerLimiterTour = MH.makeDiv(null, "Container LimiterTour");
+            containerLimiterTour.setAttribute("id", "divContainerLimiterTour");
+            containerLimiterTour.classList.add("container");
 
-            // divPrep.appendChild(buildPropertyEditor("Nombre de tour", "numberSpinner", {
-            //     "min": 1,
-            //     "max": 10,
-            //     "value": bd.tournoi.nbTour,
-            //     "id": "nbTour"
-            // }));
+            // Création et configuration de limiternbTour (checkbox)
             var limiternbTour = buildPropertyEditor("Modifier le nombre de tours (10 par défaut) ?", "checkbox",
                 { id: "limiterTour", value: bd.tournoi.limiterTour });
             limiternbTour.setAttribute("id", "divLimiterTour");
-            // limiternbTour.classList.add("container");
-            divPrep.appendChild(limiternbTour);
+
+            // Ajouter l'élément checkbox dans le container
+            containerLimiterTour.appendChild(limiternbTour);
+
+            // Ajouter un eventListener pour la modification
             MH.addNewEvent("limiterTour", "change", validModificationPreparation.bind(this, true));
+
+            // Si limiterTour est activé, ajouter le spinner "Nombre de tours" dans le même container
             if (bd.tournoi.limiterTour) {
-                divPrep.appendChild(buildPropertyEditor("Nombre de tours", "numberSpinner", {
+                var nbTourEditor = buildPropertyEditor("Nombre de tours", "numberSpinner", {
                     "min": 1,
                     "max": 30,
                     "value": bd.tournoi.nbTour,
                     "id": "nbTour"
-                }));
+                });
+                containerLimiterTour.appendChild(nbTourEditor);
             }
+            // Ajouter le container à divPrep pour séparer ces éléments des autres
+            divPrep.appendChild(containerLimiterTour);
+
             divPrep.appendChild(buildPropertyEditor("Nombre de terrains", "numberSpinner", {
                 "min": 1,
                 "max": 20,
