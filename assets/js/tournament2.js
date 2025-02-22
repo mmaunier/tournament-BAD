@@ -20,8 +20,8 @@ window.addEventListener("dblclick", function(evt){evt.preventDefault();});
 class GlobalDataBase{
     constructor(dbName){
         this.dbName = dbName;
-        localStorage.clear();
-        this.load(JSON.parse(localStorage.getItem(this.dbName)));
+        sessionStorage.clear();
+        this.load(JSON.parse(sessionStorage.getItem(this.dbName)));
     }
     dbName = "";
     joueurs = [];
@@ -81,7 +81,7 @@ class GlobalDataBase{
     }
 
     save(){
-        localStorage.setItem(this.dbName, JSON.stringify(this.getDatas()));
+        sessionStorage.setItem(this.dbName, JSON.stringify(this.getDatas()));
     }
 
     load(datas){
