@@ -113,7 +113,8 @@ class GlobalDataBase{
             datas["tournoi"].currentTour,
             datas["tournoi"].limitPoint,
             new Date(datas["tournoi"].date),
-            datas["tournoi"].nbPoints
+            datas["tournoi"].nbPoints,
+            datas["tournoi"].prendreEnCompteHandicaps
         );
     }
 
@@ -333,7 +334,7 @@ class Joueur{
 
 class Tournoi{
     constructor(//pTypeTournoi, pModeTournoi, 
-                pLimiterTour, pNbTour, pNbTerrain, pModeComptage, pPremierTerrain, pDepartMatchNegatif, pNiveauListe, pGenreListe, pContraintes, pTours, pCurrentTour, pLimitPoint, pDate, pNbPoint){
+        pLimiterTour, pNbTour, pNbTerrain, pModeComptage, pPremierTerrain, pDepartMatchNegatif, pNiveauListe, pGenreListe, pContraintes, pTours, pCurrentTour, pLimitPoint, pDate, pNbPoint, pPrendreEnCompteHandicaps){
         // this.typeTournoi = pTypeTournoi != undefined ? pTypeTournoi : typeTournoiListe.DOUBLE;
         // this.modeTournoi = pModeTournoi != undefined ? pModeTournoi : modeTournoiListe.ONESHOT;
         this.limiterTour = pLimiterTour != undefined ? pLimiterTour : false;
@@ -350,6 +351,7 @@ class Tournoi{
         this.limitPoint = pLimitPoint != undefined ? pLimitPoint : 10;
         this.date = pDate != undefined ? pDate : new Date();
         this.nbPoints = pNbPoint != undefined ? pNbPoint : 21;
+        this.prendreEnCompteHandicaps = pPrendreEnCompteHandicaps != undefined ? pPrendreEnCompteHandicaps : false;
 
         // On charge les listes de Joueurs
         // importListesJoueurs();
@@ -370,6 +372,7 @@ class Tournoi{
     date = null;
     nbPoints = null;
     modeComptage = null;
+    prendreEnCompteHandicaps = null;
 
     toJson(){
         var tours = [];
@@ -427,7 +430,8 @@ class Tournoi{
             "tours": tours,
             "currentTour": this.currentTour,
             "date": this.date,
-            "nbPoints": this.nbPoints
+            "nbPoints": this.nbPoints,
+            "prendreEnCompteHandicaps": this.prendreEnCompteHandicaps
         };
     }
 }
@@ -810,6 +814,7 @@ function buildPreparation(){
             if (bd.tournoi.modeComptage===modeComptageListe.POINTS) { 
                 divPrep.appendChild(buildPropertyViewer("Nombre de points", bd.tournoi.nbPoints));
             }
+            divPrep.appendChild(buildPropertyViewer("Prendre en compte les handicaps ?", bd.tournoi.prendreEnCompteHandicaps ? "Oui" : "Non"));
             listPrep.appendChild(divPrep);
             break;
         case pages.MODIFICATION_PREPARATION:
@@ -875,14 +880,31 @@ function buildPreparation(){
                 }));
             }
 
-            var handicaps = MH.makeButton({
-                type: "click",
-                func: editHandicaps.bind(this)
-            });
-            handicaps.classList.add("btn-secondary");
-            handicaps.innerHTML = "Handicaps et avantages";
-            divPrep.appendChild(handicaps);
+            var containerprendreEnCompteHandicaps = MH.makeDiv(null, "Container PrendrenCompteHandicaps");
+            containerprendreEnCompteHandicaps.setAttribute("id", "divContainerPrendreEnCompteHandicaps");
+            containerprendreEnCompteHandicaps.classList.add("container");
+
+            // Création et configuration de prendreEnCompteHandicaps (checkbox)
+            var prendreEnCompteHandicaps = buildPropertyEditor("Prendre en compte les handicaps ?", "checkbox",
+                { id: "prendreEnCompteHandicaps", value: bd.tournoi.prendreEnCompteHandicaps });
+            prendreEnCompteHandicaps.setAttribute("id", "divPrendreEnCompteHandicaps");
+            containerprendreEnCompteHandicaps.appendChild(prendreEnCompteHandicaps);
+            MH.addNewEvent("prendreEnCompteHandicaps", "change", validModificationPreparation.bind(this, true));
+
+            var handicaps;
+            if (bd.tournoi.prendreEnCompteHandicaps) {
+                handicaps = MH.makeButton({
+                    type: "click",
+                    func: editHandicaps.bind(this)
+                });
+                handicaps.classList.add("btn-secondary");
+                handicaps.innerHTML = "Handicaps et avantages";
+                containerprendreEnCompteHandicaps.appendChild(handicaps);
+            }
+            divPrep.appendChild(containerprendreEnCompteHandicaps);            
+            
             listPrep.appendChild(divPrep);
+
             // listPrep.appendChild(buildListContraintes());
             break;
     }
@@ -1705,25 +1727,86 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
-    // Mettre à jour les handicaps des joueurs
-    joueurAttente.points = joueurAttente.getPointsHandicap();
-    joueurMatch.points = joueurMatch.getPointsHandicap();
+// function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
+//     // Mettre à jour les handicaps des joueurs
+//     joueurAttente.points = joueurAttente.getPointsHandicap();
+//     joueurMatch.points = joueurMatch.getPointsHandicap();
 
-    // Mettre à jour les propriétés des matchs
+//     // Mettre à jour les propriétés des matchs
+//     var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
+//     var equipeA = match.equipeA;
+//     var equipeB = match.equipeB;
+
+//     var ptsEquipeA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+//     var ptsEquipeB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+
+//     match.ptsEquipeA = ptsEquipeA;
+//     match.ptsEquipeB = ptsEquipeB;
+//     match.ptsEquipeADepart = ptsEquipeA;
+//     match.ptsEquipeBDepart = ptsEquipeB;
+
+//     // Mettre à jour les adversaires et coéquipiers
+//     joueurAttente.adversaires = joueurMatch.adversaires;
+//     joueurAttente.coequipiers = joueurMatch.coequipiers;
+//     joueurMatch.adversaires = joueurAttente.adversaires;
+//     joueurMatch.coequipiers = joueurAttente.coequipiers;
+// }
+
+// VERSION 2
+function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
     var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
     var equipeA = match.equipeA;
     var equipeB = match.equipeB;
 
-    var ptsEquipeA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
-    var ptsEquipeB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+    if (bd.tournoi.prendreEnCompteHandicaps) {
+        // Calcule de la somme des handicaps de base pour chaque équipe
+        var baseA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+        var baseB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
 
-    match.ptsEquipeA = ptsEquipeA;
-    match.ptsEquipeB = ptsEquipeB;
-    match.ptsEquipeADepart = ptsEquipeA;
-    match.ptsEquipeBDepart = ptsEquipeB;
+        // Équilibrage selon newMatch :
+        if (baseA > baseB) {
+            baseA = baseA - baseB;
+            baseB = 0;
+            if ((bd.tournoi.departMatchNegatif && baseA > 0) ||
+                (!bd.tournoi.departMatchNegatif && baseA < 0)) {
+                baseB = -baseA;
+                baseA = 0;
+            }
+        } else if (baseB > baseA) {
+            baseB = baseB - baseA;
+            baseA = 0;
+            if ((bd.tournoi.departMatchNegatif && baseB > 0) ||
+                (!bd.tournoi.departMatchNegatif && baseB < 0)) {
+                baseA = -baseB;
+                baseB = 0;
+            }
+        }
 
-    // Mettre à jour les adversaires et coéquipiers
+        // Limitation à un écart maximum de 15 points
+        var maxVal = Math.max(Math.abs(baseA), Math.abs(baseB));
+        if (maxVal > 15) {
+            var diff = maxVal - 15;
+            baseA = baseA > 0 ? baseA - diff : (baseA < 0 ? baseA + diff : baseA);
+            baseB = baseB > 0 ? baseB - diff : (baseB < 0 ? baseB + diff : baseB);
+        }
+
+        // Mise à jour des scores du match
+        match.ptsEquipeA = baseA;
+        match.ptsEquipeB = baseB;
+        // Si les points de départ ne sont pas encore définis, les initialiser
+        if (match.ptsEquipeADepart === undefined) match.ptsEquipeADepart = baseA;
+        if (match.ptsEquipeBDepart === undefined) match.ptsEquipeBDepart = baseB;
+    } else {
+        // Sans prise en compte des handicaps, on laisse les points accumulés intacts
+        var sumA = equipeA.reduce((total, joueur) => total + joueur.points, 0);
+        var sumB = equipeB.reduce((total, joueur) => total + joueur.points, 0);
+        match.ptsEquipeA = sumA;
+        match.ptsEquipeB = sumB;
+        if (match.ptsEquipeADepart === undefined) match.ptsEquipeADepart = sumA;
+        if (match.ptsEquipeBDepart === undefined) match.ptsEquipeBDepart = sumB;
+    }
+
+    // Mise à jour des adversaires et coéquipiers pour les joueurs échangés
     joueurAttente.adversaires = joueurMatch.adversaires;
     joueurAttente.coequipiers = joueurMatch.coequipiers;
     joueurMatch.adversaires = joueurAttente.adversaires;
@@ -2017,30 +2100,30 @@ function validModificationHandicaps(){
 function cancelModificationHandicaps(){
     selectPage(pages.MODIFICATION_PREPARATION);
 }
-function validModificationContraintes(){
+// function validModificationContraintes(){
 
-    var contraintes = document.body.querySelectorAll(".divContrainte");
-    var retourContraintes = [];
-    var currentContrainte;
-    for (var i = 0; i < contraintes.length; i++){
-        currentContrainte = {
-            "name": bd.tournoi.contraintes[i].name,
-            "title": bd.tournoi.contraintes[i].title,
-            "desc": bd.tournoi.contraintes[i].desc,
-            "actif": contraintes[i].querySelector("input").checked,
-            "disabled": bd.tournoi.contraintes[i].disabled,
-        }
-        retourContraintes.push(currentContrainte);
-        if (currentContrainte.name == "LIMITPOINT") {
-            bd.updateTournoi({"limitPoint": contraintes[i].querySelector("#limitPoint").value });
-        }
-    }
-    bd.updateContraintes(retourContraintes);
-    selectPage(pages.MODIFICATION_PREPARATION);
-}
-function cancelModificationContraintes(){
-    selectPage(pages.MODIFICATION_PREPARATION);
-}
+//     var contraintes = document.body.querySelectorAll(".divContrainte");
+//     var retourContraintes = [];
+//     var currentContrainte;
+//     for (var i = 0; i < contraintes.length; i++){
+//         currentContrainte = {
+//             "name": bd.tournoi.contraintes[i].name,
+//             "title": bd.tournoi.contraintes[i].title,
+//             "desc": bd.tournoi.contraintes[i].desc,
+//             "actif": contraintes[i].querySelector("input").checked,
+//             "disabled": bd.tournoi.contraintes[i].disabled,
+//         }
+//         retourContraintes.push(currentContrainte);
+//         if (currentContrainte.name == "LIMITPOINT") {
+//             bd.updateTournoi({"limitPoint": contraintes[i].querySelector("#limitPoint").value });
+//         }
+//     }
+//     bd.updateContraintes(retourContraintes);
+//     selectPage(pages.MODIFICATION_PREPARATION);
+// }
+// function cancelModificationContraintes(){
+//     selectPage(pages.MODIFICATION_PREPARATION);
+// }
 function validModificationPreparation(dontExit){
     bd.updateTournoi({
         // "typeTournoi": typeTournoiListe[document.body.querySelector("div.radiotypeTournoi input:checked").id],
@@ -2050,6 +2133,7 @@ function validModificationPreparation(dontExit){
         "premierTerrain": parseInt(document.body.querySelector("#premierTerrain .numberSpinnerValue").innerHTML),
         "nbPoints": bd.tournoi.modeComptage===modeComptageListe["POINTS"] ? parseInt(document.body.querySelector("#nbPoints .numberSpinnerValue").innerHTML):bd.tournoi.nbPoints,
         "modeComptage": modeComptageListe[document.body.querySelector("div.radiomodeComptage input:checked").id],
+        "prendreEnCompteHandicaps": document.body.querySelector("#prendreEnCompteHandicaps").checked,
     });
     bd.updateContraintes();
     if (dontExit === true) {
@@ -2385,38 +2469,46 @@ function alea(max) {
 
 function newMatch(equipeA, equipeB){
     var ptsEquipeA = 0;
-    for (var m = 0; m < equipeA.length; m++){
-        ptsEquipeA += equipeA[m].getPointsHandicap();
-    }
     var ptsEquipeB = 0;
-    for (var m = 0; m < equipeB.length; m++){
-        ptsEquipeB += equipeB[m].getPointsHandicap();
-    }
 
-    //équilibrage des points
-    var departNegatif = bd.tournoi.departMatchNegatif;
-    if (ptsEquipeA > ptsEquipeB){
-        ptsEquipeA -= ptsEquipeB;
-        ptsEquipeB = 0;
-        if ((departNegatif && ptsEquipeA > 0) ||
-            (!departNegatif && ptsEquipeA < 0)){
-            ptsEquipeB = ptsEquipeA * (-1);
-            ptsEquipeA = 0;
+    if (bd.tournoi.prendreEnCompteHandicaps) {
+        for (var m = 0; m < equipeA.length; m++) {
+            ptsEquipeA += equipeA[m].getPointsHandicap();
         }
-    }else {
-        ptsEquipeB -= ptsEquipeA;
-        ptsEquipeA = 0;
-        if ((departNegatif && ptsEquipeB > 0) ||
-            (!departNegatif && ptsEquipeB < 0)){
-            ptsEquipeA = ptsEquipeB * (-1);
+        for (var m = 0; m < equipeB.length; m++) {
+            ptsEquipeB += equipeB[m].getPointsHandicap();
+        }
+
+        // Équilibrage des points
+        var departNegatif = bd.tournoi.departMatchNegatif;
+        if (ptsEquipeA > ptsEquipeB) {
+            ptsEquipeA -= ptsEquipeB;
             ptsEquipeB = 0;
+            if ((departNegatif && ptsEquipeA > 0) ||
+                (!departNegatif && ptsEquipeA < 0)) {
+                ptsEquipeB = ptsEquipeA * (-1);
+                ptsEquipeA = 0;
+            }
+        } else {
+            ptsEquipeB -= ptsEquipeA;
+            ptsEquipeA = 0;
+            if ((departNegatif && ptsEquipeB > 0) ||
+                (!departNegatif && ptsEquipeB < 0)) {
+                ptsEquipeA = ptsEquipeB * (-1);
+                ptsEquipeB = 0;
+            }
         }
-    }
 
-    var max = Math.max(ptsEquipeA, ptsEquipeB);
-    if (max > 15){
-        ptsEquipeA -= (max - 15);
-        ptsEquipeB -= (max - 15);
+        // Maximum d'écart de 15 points
+        var max = Math.max(ptsEquipeA, ptsEquipeB);
+        if (max > 15) {
+            ptsEquipeA -= (max - 15);
+            ptsEquipeB -= (max - 15);
+        }
+    } else {
+        // Initialiser les points à 0 si les handicaps ne sont pas pris en compte
+        ptsEquipeA = 0;
+        ptsEquipeB = 0;
     }
 
     return {

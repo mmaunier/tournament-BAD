@@ -471,13 +471,11 @@ div.currentTour div.match{
 .headerTour{
     box-shadow: 0px 0px 14px 2px #9a9a9a;
 }
-
 .badge{
     font-size: 0.9rem;
     box-shadow: 0px 0px 5px 2px #9a9a9a;
     margin-left: 3px;
 }
-
 #divMatchNegatif label{
     margin-bottom:0px;
 }
@@ -490,6 +488,7 @@ div.currentTour div.match{
     border-radius: 5px;
     cursor: pointer;
 }
+
 #divContainerLimiterTour {
     margin-top: 15px;
     margin-bottom: 7px;
@@ -500,6 +499,25 @@ div.currentTour div.match{
     border-radius: 5px;
     cursor: pointer;
 }
+#divLimiterTour label {
+    margin-bottom: 0px;
+}
+
+#divContainerPrendreEnCompteHandicaps {
+    margin-top: 15px;
+    margin-bottom: 7px;
+    /*font-size: 1.5rem;*/
+    /* border-bottom: 1px solid gray; */
+    box-shadow: 2px 2px 5px 0px grey;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#divPrendreEnCompteHandicaps label {
+    margin-bottom: 0px;
+}
+
 .pointMatch{
     margin: 0px !important;
 }
