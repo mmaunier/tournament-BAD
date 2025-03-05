@@ -2956,49 +2956,53 @@ function alea(max) {
 }
 
 function newMatch(equipeA, equipeB){
-    var ptsEquipeA = 0;
-    var ptsEquipeB = 0;
+    var pointsBase = calculPointsBaseMatch(equipeA, equipeB, bd.tournoi.prendreEnCompteHandicaps);
+    var ptsEquipeA = pointsBase.baseA;
+    var ptsEquipeB = pointsBase.baseB;
 
-    if (bd.tournoi.prendreEnCompteHandicaps) {
-        for (var m = 0; m < equipeA.length; m++) {
-            ptsEquipeA += equipeA[m].getPointsHandicap();
-        }
-        for (var m = 0; m < equipeB.length; m++) {
-            ptsEquipeB += equipeB[m].getPointsHandicap();
-        }
+    // var ptsEquipeA = 0;
+    // var ptsEquipeB = 0;    
 
-        // Équilibrage des points
-        var departNegatif = bd.tournoi.departMatchNegatif;
-        if (ptsEquipeA > ptsEquipeB) {
-            ptsEquipeA -= ptsEquipeB;
-            ptsEquipeB = 0;
-            if ((departNegatif && ptsEquipeA > 0) ||
-                (!departNegatif && ptsEquipeA < 0)) {
-                ptsEquipeB = ptsEquipeA * (-1);
-                ptsEquipeA = 0;
-            }
-        } else {
-            ptsEquipeB -= ptsEquipeA;
-            ptsEquipeA = 0;
-            if ((departNegatif && ptsEquipeB > 0) ||
-                (!departNegatif && ptsEquipeB < 0)) {
-                ptsEquipeA = ptsEquipeB * (-1);
-                ptsEquipeB = 0;
-            }
-        }
+    // if (bd.tournoi.prendreEnCompteHandicaps) {
+    //     for (var m = 0; m < equipeA.length; m++) {
+    //         ptsEquipeA += equipeA[m].getPointsHandicap();
+    //     }
+    //     for (var m = 0; m < equipeB.length; m++) {
+    //         ptsEquipeB += equipeB[m].getPointsHandicap();
+    //     }
 
-        // Pas plus de .75* nbPoints
-        nbPointsJeu = Math.floor(bd.tournoi.nbPoints*.75);
-        var max = Math.max(ptsEquipeA, ptsEquipeB);
-        if (max > nbPointsJeu) {
-            ptsEquipeA -= (max - nbPointsJeu);
-            ptsEquipeB -= (max - nbPointsJeu);
-        }
-    } else {
-        // Initialiser les points à 0 si les handicaps ne sont pas pris en compte
-        ptsEquipeA = 0;
-        ptsEquipeB = 0;
-    }
+    //     // Équilibrage des points
+    //     var departNegatif = bd.tournoi.departMatchNegatif;
+    //     if (ptsEquipeA > ptsEquipeB) {
+    //         ptsEquipeA -= ptsEquipeB;
+    //         ptsEquipeB = 0;
+    //         if ((departNegatif && ptsEquipeA > 0) ||
+    //             (!departNegatif && ptsEquipeA < 0)) {
+    //             ptsEquipeB = ptsEquipeA * (-1);
+    //             ptsEquipeA = 0;
+    //         }
+    //     } else {
+    //         ptsEquipeB -= ptsEquipeA;
+    //         ptsEquipeA = 0;
+    //         if ((departNegatif && ptsEquipeB > 0) ||
+    //             (!departNegatif && ptsEquipeB < 0)) {
+    //             ptsEquipeA = ptsEquipeB * (-1);
+    //             ptsEquipeB = 0;
+    //         }
+    //     }
+
+    //     // Pas plus de .75* nbPoints
+    //     nbPointsJeu = Math.floor(bd.tournoi.nbPoints*.75);
+    //     var max = Math.max(ptsEquipeA, ptsEquipeB);
+    //     if (max > nbPointsJeu) {
+    //         ptsEquipeA -= (max - nbPointsJeu);
+    //         ptsEquipeB -= (max - nbPointsJeu);
+    //     }
+    // } else {
+    //     // Initialiser les points à 0 si les handicaps ne sont pas pris en compte
+    //     ptsEquipeA = 0;
+    //     ptsEquipeB = 0;
+    // }
 
     return {
         "equipeA": equipeA,
