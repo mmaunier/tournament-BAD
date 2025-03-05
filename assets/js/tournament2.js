@@ -1711,7 +1711,7 @@ function calculPointsBaseMatch(equipeA, equipeB, prendreEnCompteHandicaps) {
                 baseB = -baseA;
                 baseA = 0;
             }
-        } else if (baseB > baseA) {
+        } else {
             baseB = baseB - baseA;
             baseA = 0;
             if ((bd.tournoi.departMatchNegatif && baseB > 0) ||
@@ -1721,12 +1721,12 @@ function calculPointsBaseMatch(equipeA, equipeB, prendreEnCompteHandicaps) {
             }
         }
 
-        // Limitation à un écart maximum de 15 points
-        var maxVal = Math.max(Math.abs(baseA), Math.abs(baseB));
-        if (maxVal > 15) {
-            var diff = maxVal - 15;
-            baseA = baseA > 0 ? baseA - diff : (baseA < 0 ? baseA + diff : baseA);
-            baseB = baseB > 0 ? baseB - diff : (baseB < 0 ? baseB + diff : baseB);
+        // Pas plus de .75* nbPoints au démarrage. Si une des valeur est négative, on ne fait rien.
+        nbPointsJeu = Math.floor(bd.tournoi.nbPoints * .75);
+        var max = Math.max(baseA, baseB);
+        if (max > nbPointsJeu) {
+            baseA -= (max - nbPointsJeu);
+            baseB -= (max - nbPointsJeu);
         }
     }
     
@@ -2987,11 +2987,12 @@ function newMatch(equipeA, equipeB){
             }
         }
 
-        // Maximum d'écart de 15 points
+        // Pas plus de .75* nbPoints
+        nbPointsJeu = Math.floor(bd.tournoi.nbPoints*.75);
         var max = Math.max(ptsEquipeA, ptsEquipeB);
-        if (max > 15) {
-            ptsEquipeA -= (max - 15);
-            ptsEquipeB -= (max - 15);
+        if (max > nbPointsJeu) {
+            ptsEquipeA -= (max - nbPointsJeu);
+            ptsEquipeB -= (max - nbPointsJeu);
         }
     } else {
         // Initialiser les points à 0 si les handicaps ne sont pas pris en compte
