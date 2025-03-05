@@ -1002,27 +1002,27 @@ function buildHeaderTour(i){
 }
 
 function buildTour(tour, i) {
-    var globalTour = MH.makeDiv(null, "tour");
+    var globalTour = MH.makeDiv("tour" + i, "tour");
     if (bd.tournoi.currentTour == i) globalTour.classList.add("currentTour");
     else if (bd.tournoi.currentTour > i) globalTour.classList.add("closedTour");
     else if (bd.tournoi.currentTour < i) globalTour.classList.add("forPlayingTour");
     var listMatchs = MH.makeDiv(null, "matchs");
     for (var j = 0; j < tour.matchs.length; j++){
-        listMatchs.appendChild(buildMatch(tour.matchs[j], j));
+        listMatchs.appendChild(buildMatch(tour.matchs[j], j, i));
     }
     globalTour.appendChild(listMatchs);
     if (tour.joueurAttente.length > 0){
         var listJoueurAttente = MH.makeDiv(null, "joueurAttente");
         listJoueurAttente.appendChild(MH.makeSpan("Joueurs en attente..."));
-        for (var i = 0; i < tour.joueurAttente.length; i++){
-            listJoueurAttente.appendChild(buildJoueur(tour.joueurAttente[i], i));
+        for (var j = 0; j < tour.joueurAttente.length; j++){
+            listJoueurAttente.appendChild(buildJoueur(tour.joueurAttente[j], j, i));
         }
         globalTour.appendChild(listJoueurAttente);
     }
     return globalTour;
 }
 
-function buildMatch(match, j) {
+function buildMatch(match, j, indexTour) {
     var divMatch = MH.makeDiv(null, "divMatch");
     var headerMatch = MH.makeDiv(null, "headerMatch");
     var num = MH.makeSpan("Terrain " + ((currentIndexMatch %bd.tournoi.nbTerrain) + bd.tournoi.premierTerrain) + " - Match " + (currentIndexMatch + 1));
@@ -1031,7 +1031,7 @@ function buildMatch(match, j) {
     var listEquipeA = MH.makeDiv(null, "equipe");
 
     for (var k = 0; k < match.equipeA.length; k++){
-        listEquipeA.appendChild(buildJoueur(match.equipeA[k], match.equipeA[k].index));
+        listEquipeA.appendChild(buildJoueur(match.equipeA[k], match.equipeA[k].index, indexTour));
     }
     var ptEquipeA = buildPropertyEditor(null , "numberSpinner", {
         "min": match["ptsEquipeADepart"],
@@ -1048,7 +1048,7 @@ function buildMatch(match, j) {
 
     var listEquipeB = MH.makeDiv(null, "equipe");
     for (var k = 0; k < match.equipeB.length; k++){
-        listEquipeB.appendChild(buildJoueur(match.equipeB[k], match.equipeB[k].index));
+        listEquipeB.appendChild(buildJoueur(match.equipeB[k], match.equipeB[k].index, indexTour));
     }
     var ptEquipeB = buildPropertyEditor(null, "numberSpinner", {
         "min": match["ptsEquipeBDepart"],
@@ -1179,10 +1179,10 @@ function buildListJoueur(){
     var divJoueur;
     if (currentPage == pages.MODIFICATION_JOUEUR){
         if (currentEditionId == -1){
-            divJoueur = buildJoueur(new Joueur(), currentEditionId);
+            divJoueur = buildJoueur(new Joueur(), currentEditionId, -1);
             divJoueur.classList.add("homme");
         }else{
-            divJoueur = buildJoueur(bd.joueurs[currentEditionId], currentEditionId);
+            divJoueur = buildJoueur(bd.joueurs[currentEditionId], currentEditionId,-1);
             divJoueur.classList.add("modificationJoueur");
         }
         divJoueurs.appendChild(divJoueur);
@@ -1213,7 +1213,7 @@ function buildListJoueur(){
                 switch (currentPage){
                     case pages.ACCUEIL:
                         if (bd.joueurs[i].selected){
-                            divJoueur = buildJoueur(bd.joueurs[i], i);
+                            divJoueur = buildJoueur(bd.joueurs[i], i,-1);
                             divJoueur.classList.add("accueil");
                             divJoueur.classList.add(bd.joueurs[i].genre.value == bd.tournoi.genreListe.HOMME.value ? "homme" : "femme");
                             divJoueurs.appendChild(divJoueur);
@@ -1224,7 +1224,7 @@ function buildListJoueur(){
                         if (bd.joueurs[i].selected) compt++;
                         var newId = MH.getNewId();
                         var divJoueurSelection = MH.makeDiv(newId, "joueurSelection");
-                        divJoueur = buildJoueur(bd.joueurs[i], i);
+                        divJoueur = buildJoueur(bd.joueurs[i], i,-1);
                         divJoueurSelection.classList.add(bd.joueurs[i].genre.value == bd.tournoi.genreListe.HOMME.value ? "homme" : "femme");
                         divJoueurSelection.appendChild(divJoueur);
                         divJoueurSelection.appendChild(MH.makeButton({
@@ -1248,8 +1248,20 @@ function buildListJoueur(){
     return listJoueurs;
 }
 
-function buildJoueur(joueur, i){
+function buildJoueur(joueur, i, indexTour){
     var joueurDom = MH.makeDiv(null, "joueur");
+    // Ajout d'un identifiant de joueur pour le DnD
+    joueurDom.setAttribute("data-player-id", joueur.name.trim());
+    // Stocker l'indice du tour auquel ce joueur appartient
+    if (indexTour !== undefined) {
+        joueurDom.setAttribute("data-tour-id", indexTour);
+    }
+    // Attribut draggable
+    joueurDom.setAttribute("draggable", "true");
+    // Ajouter les écouteurs pour le glisser‑déposer
+    joueurDom.addEventListener("dragstart", onDragStart);
+    joueurDom.addEventListener("dragover", onDragOver);
+    joueurDom.addEventListener("drop", onDrop);
     if (i == -1){
         joueurDom.classList.add("homme");
     }else{
@@ -1306,6 +1318,559 @@ function buildJoueur(joueur, i){
     return joueurDom;
 }
 
+function onDragStart(event) {
+     // Récupérer l'identifiant du joueur et son numéro de tour
+     const playerId = event.target.getAttribute("data-player-id");
+     const tourId = event.target.getAttribute("data-tour-id");
+     
+     // Stocker ces informations sous forme d'objet JSON dans dataTransfer
+     const dragData = JSON.stringify({ playerId, tourId });
+     event.dataTransfer.setData("text/plain", dragData);
+     event.dataTransfer.effectAllowed = "move";
+}
+
+function onDragOver(event) {
+    // Permettre le drop
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+}
+
+function onDragStart(event) {
+    // Récupérer l'identifiant du joueur et son numéro de tour
+    const playerId = event.target.getAttribute("data-player-id");
+    const tourId = event.target.getAttribute("data-tour-id");
+    
+    // Stocker ces informations sous forme d'objet JSON dans dataTransfer
+    const dragData = JSON.stringify({ playerId, tourId });
+    event.dataTransfer.setData("text/plain", dragData);
+    event.dataTransfer.effectAllowed = "move";
+}
+
+function onDrop(event) {
+    event.preventDefault();
+    
+    // Récupérer les données stockées : l'id du joueur et son numéro de tour
+    const dragData = JSON.parse(event.dataTransfer.getData("text/plain"));
+    const draggedId = dragData.playerId;
+    const draggedTourFromData = dragData.tourId;
+    
+    // Identifier l'élément joueur destination
+    const droppedElement = event.target.closest(".joueur");
+    if (!droppedElement) return;
+    
+    // Récupérer le nom du joueur cible
+    const droppedId = droppedElement.getAttribute("data-player-id");
+    
+    // Identifier l'élément joueur source en utilisant le draggedId
+    const draggedElement = document.querySelector("[data-player-id='" + draggedId + "']");
+    if (!draggedElement || droppedId === draggedId) return;
+    
+    // Récupérer le numéro de tour de l'élément destination
+    const droppedTour = droppedElement.getAttribute("data-tour-id");
+    
+    // Affichage d'un message demandant si on est sur de vouloir échanger les joueurs
+    const confirmMessage = `Voulez-vous échanger les joueurs <strong>${draggedId}</strong> et <strong>${droppedId}</strong> ?`;
+    showConfirmationMessage("Confirmation d'échange", confirmMessage).then(confirmed => {
+        if (!confirmed) return;
+    
+
+        // Si les joueurs ne sont pas dans le même tour, afficher un message d'erreur avec le numéro du tour concerné
+        if (draggedTourFromData !== droppedTour) {
+            showFormattedMessage("Erreur", 
+                `<p>L'échange n'est autorisé qu'entre des joueurs du <strong>même tour</strong>.</p>
+                <p class="text-danger">Tour ${draggedTourFromData} et Tour ${droppedTour}</p>`);
+            return;
+        }
+        
+        // Convertir le numéro de tour en entier
+        const currentTour = parseInt(draggedTourFromData, 10);
+
+        
+        // Déterminer si les joueurs proviennent de la zone d'attente en recherchant dans la base de données
+        const draggedInWaiting = bd.tournoi.tours[currentTour].joueurAttente.some(j => j.name.trim() === draggedId);
+        const droppedInWaiting = bd.tournoi.tours[currentTour].joueurAttente.some(j => j.name.trim() === droppedId);
+        
+        // Vérifier si les deux joueurs sont en attente, auquel cas l'échange est inutile
+        if (draggedInWaiting && droppedInWaiting) {
+            showFormattedMessage("Information", 
+                `<p>Échange inutile entre deux joueurs en attente.</p>
+                <p class="text-info">Tour ${currentTour}</p>`);
+            return;
+        }
+        
+        var joueurAttenteIndex, joueurAttenteIndex, joueur1, joueur1MatchIndex, joueur1Equipe, joueur1EquipeIndex, joueur2, joueur2MatchIndex, joueur2Equipe, joueur2EquipeIndex;
+        
+        // Récupérer le nom du joueur d'origine à partir de la base de données
+        if (draggedInWaiting) { 
+            // On recupère les paramètres du joueur en attente
+            const attenteList = bd.tournoi.tours[currentTour].joueurAttente;
+            joueurAttenteIndex = attenteList.findIndex(j => j.name.trim() === draggedId);
+            joueurAttente = attenteList[joueurAttenteIndex];
+
+            // On sait que le joueur 1 est en attente, donc le deuxième joueur est forcément en match
+            // On cherche donc le joueur 2 en match :
+            const matchList = bd.tournoi.tours[currentTour].matchs;
+            let foundB = false; // pour savoir si on a trouvé le joueur 2
+            for (let match of matchList) {
+                if (match.equipeA.some(j => j.name.trim() === droppedId)) {
+                    joueur2MatchIndex = matchList.indexOf(match);
+                    joueur2Equipe = "A";
+                    joueur2EquipeIndex = match.equipeA.findIndex(j => j.name.trim() === droppedId);
+                    joueur2 = match.equipeA[joueur2EquipeIndex];
+                    foundB = true;
+                    break;
+                }
+                if (match.equipeB.some(j => j.name.trim() === droppedId)) {
+                    joueur2MatchIndex = matchList.indexOf(match);
+                    joueur2Equipe = "B";
+                    joueur2EquipeIndex = match.equipeB.findIndex(j => j.name.trim() === droppedId);
+                    joueur2 = match.equipeB[joueur2EquipeIndex];
+                    foundB = true;
+                    break;
+                }
+            }
+            if (!foundB) {
+                // Affichange d'erreur ici : on n'a pas trouvé le deuxième joueur
+                showFormattedMessage("Erreur", 
+                    `<p>Il y a eu un problème.</p>
+                    <p class="text-danger">Je n'ai pas trouvé le deuxième joueur !</p>`);
+                return;
+            } else {
+                // On a trouvé le joueur 2, on peut continuer
+                // Échanger les joueurs dans la base de données
+                echangerJoueursAttenteMatch(currentTour, joueurAttenteIndex, joueur2MatchIndex, joueur2Equipe, joueur2EquipeIndex);
+
+                // Construire et afficher le message d'échange, avec le numéro du tour et des styles HTML
+                const message = `<h5>Tour ${currentTour + 1}</h5>
+                    <p>Échange de :</p>
+                    <ul>
+                    <li><strong>${joueurAttente.name}</strong> <em>(en attente)</em></li>
+                    <li style="list-style-type: none;">avec</li>
+                    <li><strong>${joueur2.name}</strong> <em>(en match)</em></li>
+                    </ul>`;
+                showFormattedMessage("Échange de joueurs", message);
+            }
+        } else {
+            // Le joueur 1 n'est pas en attente, on récupère ses paramètres :
+            // ici il faut chercher dans la liste des joueurs parmi les matchs du tours courant le joueur 1
+            const matchList = bd.tournoi.tours[currentTour].matchs;
+            let foundA = false;
+            for (let match of matchList) {
+                if (match.equipeA.some(j => j.name.trim() === draggedId)) {
+                    joueur1MatchIndex = matchList.indexOf(match);
+                    joueur1Equipe = "A";
+                    joueur1EquipeIndex = match.equipeA.findIndex(j => j.name.trim() === draggedId);
+                    joueur1 = match.equipeA[joueur1EquipeIndex];
+                    foundA = true;
+                    break;
+                }
+                if (match.equipeB.some(j => j.name.trim() === draggedId)) {
+                    joueur1MatchIndex = matchList.indexOf(match);
+                    joueur1Equipe = "B";
+                    joueur1EquipeIndex = match.equipeB.findIndex(j => j.name.trim() === draggedId);
+                    joueur1 = match.equipeB[joueur1EquipeIndex];
+                    foundA = true;
+                    break;
+                }
+            }
+            if (!foundA) {
+                // Affichange d'erreur ici : on n'a pas trouvé le premier joueur
+                showFormattedMessage("Erreur", 
+                    `<p>Il y a eu un problème.</p>
+                    <p class="text-danger">Je n'ai pas trouvé le premier joueur 1 !</p>`);
+                return;
+            } 
+
+            if (droppedInWaiting) {
+                // Si le joueur 2 est en attente : on récupère ses paramètres
+                const attenteList = bd.tournoi.tours[currentTour].joueurAttente;
+                joueurAttenteIndex = attenteList.findIndex(j => j.name.trim() === droppedId);
+                joueurAttente = attenteList[joueurAttenteIndex];
+
+                // On a trouvé le joueur 1 et le joueur 2 en attente, on peut continuer
+                // Échanger les joueurs dans la base de données
+                echangerJoueursAttenteMatch(currentTour, joueurAttenteIndex, joueur1MatchIndex, joueur1Equipe, joueur1EquipeIndex);  
+                
+                // Construire et afficher le message d'échange, avec le numéro du tour et des styles HTML
+                const message = `<h5>Tour ${currentTour + 1}</h5>
+                    <p>Échange de :</p>
+                    <ul>
+                        <li><strong>${joueur1.name}</strong> <em>(en match)</em></li>
+                        <li style="list-style-type: none;">avec</li>
+                        <li><strong>${joueurAttente.name}</strong> <em>(en attente)</em></li>
+                    </ul>`;
+                showFormattedMessage("Échange de joueurs", message);
+
+            } else {
+                // Les deux joueurs sont en match, on récupère les paramètres du joueur 2
+                let foundB = false;
+                for (let match of matchList) {
+                    if (match.equipeA.some(j => j.name.trim() === droppedId)) {
+                        joueur2MatchIndex = matchList.indexOf(match);
+                        joueur2Equipe = "A";
+                        joueur2EquipeIndex = match.equipeA.findIndex(j => j.name.trim() === droppedId);
+                        joueur2 = match.equipeA[joueur2EquipeIndex];
+                        foundB = true;
+                        break;
+                    }
+                    if (match.equipeB.some(j => j.name.trim() === droppedId)) {
+                        joueur2MatchIndex = matchList.indexOf(match);
+                        joueur2Equipe = "B";
+                        joueur2EquipeIndex = match.equipeB.findIndex(j => j.name.trim() === droppedId);
+                        joueur2 = match.equipeB[joueur2EquipeIndex];
+                        foundB = true;
+                        break;
+                    }
+                }
+                if (!foundB) {
+                    // Affichange d'erreur ici : on n'a pas trouvé le deuxième joueur
+                    showFormattedMessage("Erreur", 
+                        `<p>Il y a eu un problème.</p>
+                        <p class="text-danger">Je n'ai pas trouvé le deuxième joueur 2 !</p>`);
+                    return;
+                } else {
+                    // on a trouvé les deux joueurs en match, on peut continuer
+                    // Échanger les joueurs dans la base de données  
+                    echangerJoueursMatchMatch(currentTour, joueur1MatchIndex, joueur1Equipe, joueur1EquipeIndex, joueur2MatchIndex, joueur2Equipe, joueur2EquipeIndex);
+                    // Construire et afficher le message d'échange, avec le numéro du tour et des styles HTML
+                    const message = `<h5>Tour ${currentTour + 1}</h5>
+                        <p>Échange de :</p>
+                        <ul>
+                            <li><strong>${joueur1.name}</strong> <em>(en match)</em></li>
+                            <li style="list-style-type: none;">avec</li>
+                            <li><strong>${joueur2.name}</strong> <em>(en match)</em></li>
+                        </ul>`;
+                    showFormattedMessage("Échange de joueurs", message);
+                }
+            }
+
+        }
+        
+    });
+}
+
+/**
+ * Affiche une modal de confirmation avec des boutons Oui/Non et retourne une Promise
+ * @param {String} title - Titre de la modal
+ * @param {String} htmlMessage - Message formaté en HTML
+ * @returns {Promise<boolean>} - Promise résolue avec true si l'utilisateur clique sur Oui, false sinon
+ * @example
+ * showConfirmationMessage("Confirmation", "<p>Voulez-vous <strong>vraiment</strong> continuer?</p>")
+ *   .then(result => {
+ *     if (result) {
+ *       // Action si l'utilisateur a cliqué sur Oui
+ *     } else {
+ *       // Action si l'utilisateur a cliqué sur Non
+ *     }
+ *   });
+ */
+function showConfirmationMessage(title, htmlMessage) {
+    return new Promise((resolve) => {
+        // Vérifier si la modal existe déjà, sinon la créer
+        let modal = document.getElementById('confirmationMessageModal');
+        
+        if (!modal) {
+            // Créer la modal
+            const modalHTML = `
+                <div class="modal fade" id="confirmationMessageModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmationModalLabel"></h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body"></div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="btnConfirmationNo">Non</button>
+                                <button type="button" class="btn btn-primary" id="btnConfirmationYes">Oui</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Ajouter la modal au DOM
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            modal = document.getElementById('confirmationMessageModal');
+        }
+        
+        // Mettre à jour le contenu de la modal
+        modal.querySelector('.modal-title').textContent = title;
+        modal.querySelector('.modal-body').innerHTML = htmlMessage;
+        
+        // Supprimer les anciens gestionnaires d'événements
+        const btnYes = modal.querySelector('#btnConfirmationYes');
+        const btnNo = modal.querySelector('#btnConfirmationNo');
+        
+        const newBtnYes = btnYes.cloneNode(true);
+        const newBtnNo = btnNo.cloneNode(true);
+        
+        btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+        btnNo.parentNode.replaceChild(newBtnNo, btnNo);
+        
+        // Ajouter les nouveaux gestionnaires d'événements
+        newBtnYes.addEventListener('click', function() {
+            $(modal).modal('hide');
+            resolve(true);
+        });
+        
+        newBtnNo.addEventListener('click', function() {
+            $(modal).modal('hide');
+            resolve(false);
+        });
+        
+        // Gérer la fermeture de la modal avec la croix ou en cliquant à l'extérieur
+        $(modal).off('hidden.bs.modal').on('hidden.bs.modal', function() {
+            resolve(false);
+        });
+        
+        // Afficher la modal et empêcher sa fermeture avec Escape ou en cliquant à l'extérieur
+        $(modal).modal({
+            backdrop: 'static',
+            keyboard: false,
+            show: true
+        });
+    });
+}
+
+/**
+ * Fonction pour afficher un message formaté en HTML dans une modal Bootstrap
+ * @param {String} title - Titre de la modal
+ * @param {String} htmlMessage - Message formaté en HTML
+ * @returns {void}
+ * @see https://getbootstrap.com/docs/4.5/components/modal/
+ * @example
+ * showFormattedMessage("Titre de la modal", "<p>Message en <strong>gras</strong></p>");
+ */
+function showFormattedMessage(title, htmlMessage) {
+    // Vérifier si la modal existe déjà, sinon la créer
+    let modal = document.getElementById('formattedMessageModal');
+    
+    if (!modal) {
+        // Créer la modal
+        const modalHTML = `
+            <div class="modal fade" id="formattedMessageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="messageModalLabel"></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Ajouter la modal au DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('formattedMessageModal');
+    }
+    
+    // Mettre à jour le contenu de la modal
+    modal.querySelector('.modal-title').textContent = title;
+    modal.querySelector('.modal-body').innerHTML = htmlMessage;
+    
+    // Afficher la modal
+    $('#formattedMessageModal').modal('show');
+}
+
+
+/**
+ * Calcule les points de handicap de base pour chaque équipe d'un match
+ * @param {Array} equipeA - Joueurs de l'équipe A
+ * @param {Array} equipeB - Joueurs de l'équipe B
+ * @param {Object} joueur - Instance du joueur (pour accéder aux méthodes comme getPointsHandicap)
+ * @param {Boolean} prendreEnCompteHandicaps - Indique si on doit prendre en compte les handicaps
+ * @returns {Object} Objet contenant baseA et baseB, les points de handicap calculés
+ */
+function calculPointsBaseMatch(equipeA, equipeB, prendreEnCompteHandicaps) {
+    // Initialiser les points à 0
+    let baseA = 0;
+    let baseB = 0;
+    
+    // Si les handicaps doivent être pris en compte
+    if (prendreEnCompteHandicaps) {
+        // Calcule de la somme des handicaps de base pour chaque équipe
+        baseA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+        baseB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
+
+        // Équilibrage selon newMatch :
+        if (baseA > baseB) {
+            baseA = baseA - baseB;
+            baseB = 0;
+            if ((bd.tournoi.departMatchNegatif && baseA > 0) ||
+                (!bd.tournoi.departMatchNegatif && baseA < 0)) {
+                baseB = -baseA;
+                baseA = 0;
+            }
+        } else if (baseB > baseA) {
+            baseB = baseB - baseA;
+            baseA = 0;
+            if ((bd.tournoi.departMatchNegatif && baseB > 0) ||
+                (!bd.tournoi.departMatchNegatif && baseB < 0)) {
+                baseA = -baseB;
+                baseB = 0;
+            }
+        }
+
+        // Limitation à un écart maximum de 15 points
+        var maxVal = Math.max(Math.abs(baseA), Math.abs(baseB));
+        if (maxVal > 15) {
+            var diff = maxVal - 15;
+            baseA = baseA > 0 ? baseA - diff : (baseA < 0 ? baseA + diff : baseA);
+            baseB = baseB > 0 ? baseB - diff : (baseB < 0 ? baseB + diff : baseB);
+        }
+    }
+    
+    // Retourner les points calculés
+    return {
+        baseA: baseA,
+        baseB: baseB
+    };
+}
+
+/**
+ *  Pour échanger les joueurs en attente et en match en plein tournoi
+ * @param {Number} tourIndex - Indice du tour
+ * @param {Number} joueurAttenteIndex - Indice du joueur en attente
+ * @param {Number} matchIndex - Indice du match
+ * @param {String} joueurMatchEquipe - Équipe du joueur en match ("A" ou "B")
+ * @param {Number} joueurMatchEquipeIndex - Indice du joueur dans l'équipe (0 ou 1)
+ */
+function echangerJoueursAttenteMatch(tourIndex,joueurAttenteIndex, matchIndex, joueurMatchEquipe, joueurMatchEquipeIndex){
+    var joueurAttente = bd.tournoi.tours[tourIndex].joueurAttente[joueurAttenteIndex];
+    var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
+    var joueurMatch;
+    if (joueurMatchEquipe == "A"){  
+        joueurMatch = match.equipeA[joueurMatchEquipeIndex];
+        match.equipeA[joueurMatchEquipeIndex] = joueurAttente;
+    } else {
+        joueurMatch = match.equipeB[joueurMatchEquipeIndex];
+        match.equipeB[joueurMatchEquipeIndex] = joueurAttente;
+    }
+    bd.tournoi.tours[tourIndex].joueurAttente[joueurAttenteIndex] = joueurMatch;
+    bd.save();
+    // Mettre à jour les scores
+    updateHandicapsEtProprietesAttenteMatch(tourIndex, joueurAttente, joueurMatch, matchIndex);
+    
+    // Mettre à jour l'affichage
+    selectPage(pages.EXECUTION_TOURNOI);
+}
+
+
+/**
+ * Met à jour les handicaps et les propriétés des joueurs après un échange
+ * @param {Object} joueurAttente - Joueur en attente
+ * @param {Object} joueurMatch - Joueur en match
+ * @param {Number} tourIndex - Indice du tour
+ * @param {Number} matchIndex - Indice du match
+ */
+function updateHandicapsEtProprietesAttenteMatch(tourIndex, joueurAttente, joueurMatch, matchIndex) {
+    var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
+    var equipeA = match.equipeA;
+    var equipeB = match.equipeB;
+
+    // Utiliser la nouvelle fonction pour calculer les points de base
+    var pointsBase = calculPointsBaseMatch(equipeA, equipeB, bd.tournoi.prendreEnCompteHandicaps);
+    
+    // Mise à jour des scores du match
+    match.ptsEquipeA = pointsBase.baseA;
+    match.ptsEquipeB = pointsBase.baseB;
+    
+    // Si les points de départ ne sont pas encore définis, les initialiser
+    if (match.ptsEquipeADepart === undefined) match.ptsEquipeADepart = pointsBase.baseA;
+    if (match.ptsEquipeBDepart === undefined) match.ptsEquipeBDepart = pointsBase.baseB;
+
+    // Mise à jour des adversaires et coéquipiers pour les joueurs échangés
+    joueurAttente.adversaires = joueurMatch.adversaires;
+    joueurAttente.coequipiers = joueurMatch.coequipiers;
+    joueurMatch.adversaires = joueurAttente.adversaires;
+    joueurMatch.coequipiers = joueurAttente.coequipiers;
+}
+
+
+/**
+ *  Pour échanger les joueurs en attente et en match en plein tournoi
+ * @param {Number} tourIndex - Indice du tour
+ * @param {Number} joueur1MatchIndex - Indice du match pour le joueur 1
+ * @param {String} joueur1MatchEquipe - Équipe du joueur 1 en match ("A" ou "B")
+ * @param {Number} joueur1MatchEquipeIndex - Indice du joueur 1 dans l'équipe (0 ou 1) * 
+ * @param {Number} joueur2MatchIndex - Indice du match pour le joueur 2
+ * @param {String} joueur2MatchEquipe - Équipe du joueur 2 en match ("A" ou "B")
+ * @param {Number} joueur2MatchEquipeIndex - Indice du joueur 2 dans l'équipe (0 ou 1)
+ */
+function echangerJoueursMatchMatch(tourIndex, joueur1MatchIndex, joueur1MatchEquipe, joueur1MatchEquipeIndex, joueur2MatchIndex, joueur2MatchEquipe, joueur2MatchEquipeIndex){
+    var match1 = bd.tournoi.tours[tourIndex].matchs[joueur1MatchIndex];
+    var match2 = bd.tournoi.tours[tourIndex].matchs[joueur2MatchIndex];
+    var joueur1 = joueur1MatchEquipe==="A" ? match1.equipeA[joueur1MatchEquipeIndex] : match1.equipeB[joueur1MatchEquipeIndex];
+    var joueur2 = joueur2MatchEquipe==="A" ? match2.equipeA[joueur2MatchEquipeIndex] : match2.equipeB[joueur2MatchEquipeIndex];
+    if (joueur1MatchEquipe == "A") {
+        match1.equipeA[joueur1MatchEquipeIndex] = joueur2;
+    } else {
+        match1.equipeB[joueur1MatchEquipeIndex] = joueur2;
+    }
+    if (joueur2MatchEquipe == "A") {
+        match2.equipeA[joueur2MatchEquipeIndex] = joueur1;
+    } else {
+        match2.equipeB[joueur2MatchEquipeIndex] = joueur1;
+    }
+    bd.save();
+    // Mettre à jour les scores
+    updateHandicapsEtProprietesMatchMatch(tourIndex, joueur1, joueur2, joueur1MatchIndex, joueur2MatchIndex);
+    
+    // Mettre à jour l'affichage
+    selectPage(pages.EXECUTION_TOURNOI);
+}
+
+/**
+ * Met à jour les handicaps et les propriétés des joueurs après un échange entre 2 joueurs en match
+ * @param {Number} tourIndex - Indice du tour
+ * @param {Object} joueur1 - Joueur 1 en match
+ * @param {Number} joueur2MatchIndex - Indice du match
+ * @param {Object} joueur2 - Joueur 2 en match
+ * @param {Number} joueur2MatchIndex - Indice du match
+ */
+function updateHandicapsEtProprietesMatchMatch(tourIndex, joueur1, joueur2, joueur1MatchIndex, joueur2MatchIndex) {
+    var match1 = bd.tournoi.tours[tourIndex].matchs[joueur1MatchIndex];
+    var match2 = bd.tournoi.tours[tourIndex].matchs[joueur2MatchIndex];
+    var equipeA1 = match1.equipeA;
+    var equipeB1 = match1.equipeB;
+    var equipeA2 = match2.equipeA;
+    var equipeB2 = match2.equipeB;
+
+    // Utiliser la nouvelle fonction pour calculer les points de base
+    var pointsBase1 = calculPointsBaseMatch(equipeA1, equipeB1, bd.tournoi.prendreEnCompteHandicaps);
+    var pointsBase2 = calculPointsBaseMatch(equipeA2, equipeB2, bd.tournoi.prendreEnCompteHandicaps);
+    
+    // Mise à jour des scores du match
+    match1.ptsEquipeA = pointsBase1.baseA;
+    match1.ptsEquipeB = pointsBase1.baseB;
+    match2.ptsEquipeA = pointsBase2.baseA;
+    match2.ptsEquipeB = pointsBase2.baseB;
+    
+    // Si les points de départ ne sont pas encore définis, les initialiser
+    if (match1.ptsEquipeADepart === undefined) match1.ptsEquipeADepart = pointsBase1.baseA;
+    if (match1.ptsEquipeBDepart === undefined) match1.ptsEquipeBDepart = pointsBase1.baseB;
+    if (match2.ptsEquipeADepart === undefined) match2.ptsEquipeADepart = pointsBase2.baseA;
+    if (match2.ptsEquipeBDepart === undefined) match2.ptsEquipeBDepart = pointsBase2.baseB;
+
+    // Mise à jour des adversaires et coéquipiers pour les joueurs échangés
+    joueur1.adversaires = joueur2.adversaires;
+    joueur1.coequipiers = joueur2.coequipiers;
+    joueur2.adversaires = joueur1.adversaires;
+    joueur2.coequipiers = joueur1.coequipiers;
+    bd.save();
+}
+
+
 function buildBadgeNiveau(joueur){
     var niveau = MH.makeSpan(joueur.niveau.value);
     niveau.classList.add("badge");
@@ -1337,7 +1902,14 @@ function buildPropertyEditor(pKey, type, attributes){
     if (type == "checkbox") property.classList.add("propertyRow");
     var key = MH.makeLabel(pKey);
     key.classList.add("propertyKey");
-    key.setAttribute("for", attributes["id"]);
+    // key.setAttribute("for", attributes["id"]);
+    // if (attributes && attributes["id"]) {
+    //     key.setAttribute("for", attributes["id"]);
+    // }
+    // Ne pas mettre l'attribut "for" pour les numberSpinners
+    if (attributes && attributes["id"] && type !== "numberSpinner") {
+        key.setAttribute("for", attributes["id"]);
+    }
     var value = buildEditor(type, attributes);
     value.classList.add("propertyValue");
     if (attributes["column-reverse"] == true){
@@ -1389,10 +1961,12 @@ function buildEditor(type, attributes){
             return input;
         case "numberSpinner":
             var vertical = attributes["vertical"] == true;
+            
             var divInputNumber = MH.makeDiv(attributes["id"], "numberSpinner" + (vertical ? " vertical" : ""));
             for (var att in attributes) {
                 divInputNumber.setAttribute(att, attributes[att]);
             }
+            
             // Création d'un span éditable pour afficher et modifier la valeur
             var spanNumber = MH.makeSpan(attributes["value"], "numberSpinnerValue");
             spanNumber.setAttribute("contenteditable", "true");
@@ -1720,98 +2294,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         bd.tournoi.tours[tourIndex].joueurAttente[joueurAttenteIndex] = joueurEnMatch;
 
-        updateHandicapsEtProprietes(joueurAttente, joueurEnMatch, tourIndex, matchIndex, playerIndexInTeam);
+        updateHandicapsEtProprietesAttenteMatch(tourIndex, joueurAttente, joueurEnMatch, matchIndex);
         bd.save();
         $('#modalEchangeJoueurs').modal('hide');
         selectPage(pages.EXECUTION_TOURNOI);
     });
 });
-
-// function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
-//     // Mettre à jour les handicaps des joueurs
-//     joueurAttente.points = joueurAttente.getPointsHandicap();
-//     joueurMatch.points = joueurMatch.getPointsHandicap();
-
-//     // Mettre à jour les propriétés des matchs
-//     var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
-//     var equipeA = match.equipeA;
-//     var equipeB = match.equipeB;
-
-//     var ptsEquipeA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
-//     var ptsEquipeB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
-
-//     match.ptsEquipeA = ptsEquipeA;
-//     match.ptsEquipeB = ptsEquipeB;
-//     match.ptsEquipeADepart = ptsEquipeA;
-//     match.ptsEquipeBDepart = ptsEquipeB;
-
-//     // Mettre à jour les adversaires et coéquipiers
-//     joueurAttente.adversaires = joueurMatch.adversaires;
-//     joueurAttente.coequipiers = joueurMatch.coequipiers;
-//     joueurMatch.adversaires = joueurAttente.adversaires;
-//     joueurMatch.coequipiers = joueurAttente.coequipiers;
-// }
-
-// VERSION 2
-function updateHandicapsEtProprietes(joueurAttente, joueurMatch, tourIndex, matchIndex, joueurMatchIndex) {
-    var match = bd.tournoi.tours[tourIndex].matchs[matchIndex];
-    var equipeA = match.equipeA;
-    var equipeB = match.equipeB;
-
-    if (bd.tournoi.prendreEnCompteHandicaps) {
-        // Calcule de la somme des handicaps de base pour chaque équipe
-        var baseA = equipeA.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
-        var baseB = equipeB.reduce((total, joueur) => total + joueur.getPointsHandicap(), 0);
-
-        // Équilibrage selon newMatch :
-        if (baseA > baseB) {
-            baseA = baseA - baseB;
-            baseB = 0;
-            if ((bd.tournoi.departMatchNegatif && baseA > 0) ||
-                (!bd.tournoi.departMatchNegatif && baseA < 0)) {
-                baseB = -baseA;
-                baseA = 0;
-            }
-        } else if (baseB > baseA) {
-            baseB = baseB - baseA;
-            baseA = 0;
-            if ((bd.tournoi.departMatchNegatif && baseB > 0) ||
-                (!bd.tournoi.departMatchNegatif && baseB < 0)) {
-                baseA = -baseB;
-                baseB = 0;
-            }
-        }
-
-        // Limitation à un écart maximum de 15 points
-        var maxVal = Math.max(Math.abs(baseA), Math.abs(baseB));
-        if (maxVal > 15) {
-            var diff = maxVal - 15;
-            baseA = baseA > 0 ? baseA - diff : (baseA < 0 ? baseA + diff : baseA);
-            baseB = baseB > 0 ? baseB - diff : (baseB < 0 ? baseB + diff : baseB);
-        }
-
-        // Mise à jour des scores du match
-        match.ptsEquipeA = baseA;
-        match.ptsEquipeB = baseB;
-        // Si les points de départ ne sont pas encore définis, les initialiser
-        if (match.ptsEquipeADepart === undefined) match.ptsEquipeADepart = baseA;
-        if (match.ptsEquipeBDepart === undefined) match.ptsEquipeBDepart = baseB;
-    } else {
-        // Sans prise en compte des handicaps, on laisse les points accumulés intacts
-        var sumA = equipeA.reduce((total, joueur) => total + joueur.points, 0);
-        var sumB = equipeB.reduce((total, joueur) => total + joueur.points, 0);
-        match.ptsEquipeA = sumA;
-        match.ptsEquipeB = sumB;
-        if (match.ptsEquipeADepart === undefined) match.ptsEquipeADepart = sumA;
-        if (match.ptsEquipeBDepart === undefined) match.ptsEquipeBDepart = sumB;
-    }
-
-    // Mise à jour des adversaires et coéquipiers pour les joueurs échangés
-    joueurAttente.adversaires = joueurMatch.adversaires;
-    joueurAttente.coequipiers = joueurMatch.coequipiers;
-    joueurMatch.adversaires = joueurAttente.adversaires;
-    joueurMatch.coequipiers = joueurAttente.coequipiers;
-}
 
 function showModalEchangeJoueurs() {
     // Remplir la liste des tours
